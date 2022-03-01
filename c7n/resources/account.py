@@ -758,12 +758,14 @@ class ServiceLimit(Filter):
         if 'c7n:ServiceLimits' not in resources[0]:
             resources[0]['c7n:ServiceLimits'] = []
         resources[0]['c7n:ServiceLimits'].append(results)
-
-        # check if we need to refresh the check for next time
-        delta = datetime.timedelta(self.data.get('refresh_period', 1))
-        check_date = parse_date(results['timestamp'])
-        if datetime.datetime.now(tz=tzutc()) - delta > check_date:
-            client.refresh_trusted_advisor_check(checkId=check['id'])
+        
+        # if account was recently created and trusted advisor is not_available there is no timestamp object returned with check_result
+        if result['timestamp']:
+            # check if we need to refresh the check for next time
+            delta = datetime.timedelta(self.data.get('refresh_period', 1))
+            check_date = parse_date(results['timestamp'])
+            if datetime.datetime.now(tz=tzutc()) - delta > check_date:
+                client.refresh_trusted_advisor_check(checkId=check['id'])
 
         services = self.data.get('services')
         limits = self.data.get('limits')
